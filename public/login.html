@@ -534,7 +534,10 @@ async function carregarSessaoDiscord(token) {
     console.log("Erro ao Carregar Sessão do Discord");
   }
 }
-    
+    const existingToken = localStorage.getItem("gzn_token");
+if (existingToken) {
+  carregarSessaoDiscord(existingToken);
+}
     async function entrarPainel() {
       const finalToken = localStorage.getItem("gzn_token");
       const key = keyInput.value.trim();
