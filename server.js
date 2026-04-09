@@ -26,10 +26,11 @@ const REDIRECT_URI = "https://painel-hwid-production.up.railway.app/callback";
 // SENHA DO ADMIN
 const ADMIN_PASSWORD = "Gzn@Admin#9482";
 
-app.get("/admin", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "admin.html"));
-});
+app.use(express.static(path.join(__dirname, "public")));
 
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "login.html"));
+});
 // ========= LOGIN DISCORD =========
 app.get("/login", (req, res) => {
   const url = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify`;
@@ -97,22 +98,22 @@ app.post("/auth", (req, res) => {
   const { token, hwid, key } = req.body;
 
   const data = tokens[token];
-  if (!data) return res.json({ success: false, error: "Token inválido" });
+  if (!data) return res.json({ success: false, error: "Token Inválido" });
 
   if (Date.now() > data.expires) {
     delete tokens[token];
-    return res.json({ success: false, error: "Token expirado" });
+    return res.json({ success: false, error: "Token Expirado" });
   }
 
   const discordId = data.discordId;
   const license = licenses[key];
 
   if (!license) {
-    return res.json({ success: false, error: "Key inválida" });
+    return res.json({ success: false, error: "Key Inválida" });
   }
 
   if (!license.active) {
-    return res.json({ success: false, error: "Key desativada" });
+    return res.json({ success: false, error: "Key Desativada" });
   }
 
   if (!license.hwid) {
@@ -122,7 +123,7 @@ app.post("/auth", (req, res) => {
   }
 
   if (license.hwid !== hwid) {
-    return res.json({ success: false, error: "HWID diferente" });
+    return res.json({ success: false, error: "HWID Diferente" });
   }
 
   return res.json({ success: true });
@@ -132,7 +133,7 @@ app.post("/auth", (req, res) => {
 function checkAdmin(req, res, next) {
   const password = req.headers["x-admin-password"];
   if (password !== ADMIN_PASSWORD) {
-    return res.status(401).json({ success: false, error: "Senha admin inválida" });
+    return res.status(401).json({ success: false, error: "Senha Admin Inválida" });
   }
   next();
 }
@@ -169,7 +170,7 @@ app.post("/api/licenses/toggle", checkAdmin, (req, res) => {
   const { key } = req.body;
 
   if (!licenses[key]) {
-    return res.json({ success: false, error: "Key não encontrada" });
+    return res.json({ success: false, error: "Key Não Encontrada" });
   }
 
   licenses[key].active = !licenses[key].active;
@@ -180,7 +181,7 @@ app.post("/api/licenses/reset-hwid", checkAdmin, (req, res) => {
   const { key } = req.body;
 
   if (!licenses[key]) {
-    return res.json({ success: false, error: "Key não encontrada" });
+    return res.json({ success: false, error: "Key Não Encontrada" });
   }
 
   licenses[key].hwid = null;
