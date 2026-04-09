@@ -1,3 +1,3 @@
 git add .
-git commit -m "login page funcionando"
+git commit -m "remove path duplicado"
 git push
