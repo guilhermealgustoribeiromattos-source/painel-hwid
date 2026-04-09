@@ -12,7 +12,7 @@ let users = {};
 // 🔑 CONFIGURA AQUI
 const CLIENT_ID = "1491183348167475322";
 const CLIENT_SECRET = "f4UmFHkGEq3oD2Ea_LwEmnpEV_ceWTcv";
-const REDIRECT_URI = "http://localhost:3000/callback";
+const REDIRECT_URI = "https://painel-hwid-production.up.railway.app/callback";
 
 // LOGIN DISCORD
 app.get("/login", (req, res) => {
