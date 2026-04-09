@@ -1,3 +1,3 @@
 git add .
-git commit -m "link railway"
+git commit -m "painel admin protegido"
 git push
