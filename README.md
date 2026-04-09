@@ -1,3 +1,3 @@
 git add .
-git commit -m "puxa avatar e nome do discord"
+git commit -m "restaura rota admin"
 git push
