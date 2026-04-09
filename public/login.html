@@ -1,1 +1,170 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>GZN Engine</title>
 
+<style>
+body {
+  margin: 0;
+  font-family: Arial;
+  background: #0b1220;
+  color: white;
+  display: flex;
+  height: 100vh;
+}
+
+/* LEFT */
+.left {
+  width: 40%;
+  padding: 40px;
+  background: linear-gradient(180deg, #0b1220, #0e1a35);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* RIGHT */
+.right {
+  width: 60%;
+  background: url("https://i.imgur.com/YOURIMAGE.png") center/cover no-repeat;
+}
+
+/* CARD */
+.card {
+  max-width: 350px;
+}
+
+/* INPUT */
+.input {
+  width: 100%;
+  padding: 15px;
+  margin-top: 15px;
+  border-radius: 10px;
+  border: none;
+  background: #101a33;
+  color: white;
+  outline: none;
+}
+
+/* BUTTON */
+.button {
+  margin-top: 20px;
+  padding: 15px;
+  width: 100%;
+  border-radius: 10px;
+  border: none;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.button:hover {
+  background: #1d4ed8;
+}
+
+/* PROFILE */
+.profile {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.profile img {
+  width: 50px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+/* TOAST */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #16a34a;
+  padding: 15px;
+  border-radius: 10px;
+  display: none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="left">
+  <div class="card">
+
+    <h2>GZN ENGINE</h2>
+
+    <div class="profile" id="profile" style="display:none;">
+      <img id="avatar">
+      <div id="username"></div>
+    </div>
+
+    <input class="input" id="key" placeholder="Digite sua key">
+
+    <button class="button" onclick="loginDiscord()">Entrar com Discord</button>
+
+    <button class="button" onclick="entrar()">Entrar no Painel</button>
+
+  </div>
+</div>
+
+<div class="right"></div>
+
+<div class="toast" id="toast">Discord Sincronizado com Sucesso!</div>
+
+<script>
+let token = null;
+
+// LOGIN DISCORD
+function loginDiscord() {
+  window.location.href = "/login";
+}
+
+// PEGAR TOKEN DA URL
+const params = new URLSearchParams(window.location.search);
+if (params.get("token")) {
+  token = params.get("token");
+
+  document.getElementById("toast").style.display = "block";
+
+  setTimeout(() => {
+    document.getElementById("toast").style.display = "none";
+  }, 3000);
+}
+
+// ENTRAR
+async function entrar() {
+  const key = document.getElementById("key").value;
+
+  if (!token) {
+    alert("Faça Login no Discord Primeiro");
+    return;
+  }
+
+  const res = await fetch("/auth", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      token,
+      key,
+      hwid: "PC-" + navigator.userAgent
+    })
+  });
+
+  const data = await res.json();
+
+  if (data.success) {
+    alert("Login Realizado!");
+  } else {
+    alert(data.error || "Erro");
+  }
+}
+</script>
+
+</body>
+</html>
