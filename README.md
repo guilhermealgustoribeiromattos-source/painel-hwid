@@ -1,3 +1,3 @@
 git add .
-git commit -m "painel admin protegido"
+git commit -m "add imagem gzn"
 git push
