@@ -75,21 +75,47 @@ tokens[loginToken] = {
   expires: Date.now() + 1000 * 60 * 5
 };
 
-    res.send(`
-      <html>
-        <body style="background:#0b1020;color:white;font-family:Arial;display:flex;align-items:center;justify-content:center;height:100vh;">
-          <div style="text-align:center">
-            <h2>Logado com Sucesso</h2>
-            <p>Abrindo o Aplicativo...</p>
-          </div>
-          <script>
-            setTimeout(() => {
-              window.location.href = "gzn://login?token=${loginToken}";
-            }, 1000);
-          </script>
-        </body>
-      </html>
-    `);
+res.send(`
+  <html>
+    <head>
+      <title>Verificando Discord</title>
+      <style>
+        body {
+          margin: 0;
+          background: #08111f;
+          color: white;
+          font-family: Arial, sans-serif;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          height: 100vh;
+        }
+        .box {
+          text-align: center;
+          padding: 30px;
+          border-radius: 18px;
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.08);
+        }
+        .muted {
+          color: #8ea0c8;
+          margin-top: 10px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="box">
+        <h2>Discord verificado com sucesso</h2>
+        <div class="muted">Redirecionando... não atualize a página.</div>
+      </div>
+      <script>
+        setTimeout(() => {
+          window.location.href = "/?token=${loginToken}";
+        }, 1200);
+      </script>
+    </body>
+  </html>
+`);
   } catch (err) {
     if (err.response) {
       console.log("Erro Discord:", err.response.status, err.response.data);
