@@ -1,3 +1,3 @@
 git add .
-git commit -m "remove path duplicado"
+git commit -m "remove rota api online"
 git push
