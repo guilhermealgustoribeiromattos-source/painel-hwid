@@ -513,8 +513,28 @@ if (savedAvatar) avatarImg.src = savedAvatar;
   localStorage.setItem("gzn_token", token);
   showToast();
   carregarSessaoDiscord(token);
+      
 }
+async function carregarSessaoDiscord(token) {
+  try {
+    const res = await fetch(`/session?token=${encodeURIComponent(token)}`);
+    const data = await res.json();
 
+    if (!data.success) return;
+
+    sessionName.textContent = data.username || "Discord Sincronizado";
+
+    if (data.avatar) {
+      avatarImg.src = data.avatar;
+    }
+
+    localStorage.setItem("gzn_discord_name", data.username || "Discord Sincronizado");
+    localStorage.setItem("gzn_discord_avatar", data.avatar || "/img/default-avatar.png");
+  } catch (e) {
+    console.log("Erro ao Carregar Sessão do Discord");
+  }
+}
+    
     async function entrarPainel() {
       const finalToken = localStorage.getItem("gzn_token");
       const key = keyInput.value.trim();
