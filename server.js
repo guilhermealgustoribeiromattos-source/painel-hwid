@@ -204,7 +204,6 @@ app.post("/api/licenses/delete", checkAdmin, (req, res) => {
   delete licenses[key];
   res.json({ success: true });
 });
-const path = require("path");
 
 app.use(express.static(path.join(__dirname, "public")));
 
