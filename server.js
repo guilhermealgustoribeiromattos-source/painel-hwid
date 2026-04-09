@@ -19,8 +19,8 @@ let licenses = {
   }
 };
 
-const CLIENT_ID = process.env.CLIENT_ID || "SEU_CLIENT_ID";
-const CLIENT_SECRET = process.env.CLIENT_SECRET || "SEU_CLIENT_SECRET";
+const CLIENT_ID = process.env.CLIENT_ID || "1491183348167475322";
+const CLIENT_SECRET = process.env.CLIENT_SECRET || "f4UmFHkGEq3oD2Ea_LwEmnpEV_ceWTcv";
 const REDIRECT_URI = "https://painel-hwid-production.up.railway.app/callback";
 
 // SENHA DO ADMIN
