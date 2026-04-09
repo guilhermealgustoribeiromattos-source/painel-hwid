@@ -26,11 +26,6 @@ const REDIRECT_URI = "https://painel-hwid-production.up.railway.app/callback";
 // SENHA DO ADMIN
 const ADMIN_PASSWORD = "Gzn@Admin#9482";
 
-// ========= SITE =========
-app.get("/", (req, res) => {
-  res.send("API ONLINE 🔥");
-});
-
 app.get("/admin", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "admin.html"));
 });
