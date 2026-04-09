@@ -24,7 +24,7 @@ const CLIENT_SECRET = process.env.CLIENT_SECRET || "SEU_CLIENT_SECRET";
 const REDIRECT_URI = "https://painel-hwid-production.up.railway.app/callback";
 
 // SENHA DO ADMIN
-const ADMIN_PASSWORD = "123456";
+const ADMIN_PASSWORD = "Gzn@Admin#9482";
 
 // ========= SITE =========
 app.get("/", (req, res) => {
