@@ -60,12 +60,20 @@ app.get("/callback", async (req, res) => {
     });
 
     const user = userRes.data;
-    const loginToken = Math.random().toString(36).substring(2);
+const loginToken = Math.random().toString(36).substring(2);
 
-    tokens[loginToken] = {
-      discordId: user.id,
-      expires: Date.now() + 1000 * 60 * 5
-    };
+let avatarUrl = "/img/default-avatar.png";
+
+if (user.avatar) {
+  avatarUrl = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=256`;
+}
+
+tokens[loginToken] = {
+  discordId: user.id,
+  username: user.username,
+  avatar: avatarUrl,
+  expires: Date.now() + 1000 * 60 * 5
+};
 
     res.send(`
       <html>
