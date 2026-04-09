@@ -79,8 +79,8 @@ tokens[loginToken] = {
       <html>
         <body style="background:#0b1020;color:white;font-family:Arial;display:flex;align-items:center;justify-content:center;height:100vh;">
           <div style="text-align:center">
-            <h2>Logado com sucesso</h2>
-            <p>Abrindo o aplicativo...</p>
+            <h2>Logado com Sucesso</h2>
+            <p>Abrindo o Aplicativo...</p>
           </div>
           <script>
             setTimeout(() => {
@@ -214,7 +214,27 @@ app.use(express.static(path.join(__dirname, "public")));
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "login.html"));
 });
+app.get("/session", (req, res) => {
+  const token = req.query.token;
 
+  if (!token || !tokens[token]) {
+    return res.json({ success: false, error: "Sessão não encontrada" });
+  }
+
+  const data = tokens[token];
+
+  if (Date.now() > data.expires) {
+    delete tokens[token];
+    return res.json({ success: false, error: "Sessão expirada" });
+  }
+
+  res.json({
+    success: true,
+    username: data.username,
+    avatar: data.avatar,
+    discordId: data.discordId
+  });
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
