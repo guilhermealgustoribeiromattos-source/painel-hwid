@@ -1,3 +1,3 @@
 git add .
-git commit -m "remove rota api online"
+git commit -m "puxa avatar e nome do discord"
 git push
