@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel Admin GZN</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0b1020;
+      color: white;
+      padding: 30px;
+    }
+
+    h1 {
+      margin-bottom: 8px;
+    }
+
+    .muted {
+      color: #9ca3af;
+    }
+
+    .topbar {
+      display: flex;
+      gap: 10px;
+      margin: 20px 0;
+      flex-wrap: wrap;
+    }
+
+    input {
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: none;
+      outline: none;
+      min-width: 240px;
+    }
+
+    button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover {
+      opacity: 0.92;
+    }
+
+    .danger {
+      background: #dc2626;
+    }
+
+    .yellow {
+      background: #d97706;
+    }
+
+    .green {
+      background: #16a34a;
+    }
+
+    .card {
+      background: #121a33;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 0 12px rgba(0,0,0,.25);
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1.7fr 1fr 1fr 1.4fr auto;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .status-on {
+      color: #22c55e;
+      font-weight: bold;
+    }
+
+    .status-off {
+      color: #ef4444;
+      font-weight: bold;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    #loginBox, #adminBox {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 900px) {
+      .row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="loginBox">
+    <h1>Painel Admin GZN</h1>
+    <div class="muted">Digite a senha do admin para gerenciar as keys</div>
+
+    <div class="topbar">
+      <input type="password" id="adminPassword" placeholder="Senha do admin">
+      <button onclick="loginAdmin()">Entrar</button>
+    </div>
+
+    <div id="loginResult" class="muted"></div>
+  </div>
+
+  <div id="adminBox" style="display:none;">
+    <h1>Painel Admin GZN</h1>
+    <div class="muted">Gerencie keys, HWID e ativações</div>
+
+    <div class="topbar">
+      <button onclick="createKey()">Criar Key</button>
+      <button class="green" onclick="loadLicenses()">Atualizar</button>
+      <button class="danger" onclick="logoutAdmin()">Sair</button>
+    </div>
+
+    <div id="result" class="muted" style="margin-bottom:20px;"></div>
+    <div id="licenses"></div>
+  </div>
+
+  <script>
+    let adminPassword = localStorage.getItem("adminPassword") || "";
+
+    function getHeaders() {
+      return {
+        "Content-Type": "application/json",
+        "x-admin-password": adminPassword
+      };
+    }
+
+    function showAdmin() {
+      document.getElementById("loginBox").style.display = "none";
+      document.getElementById("adminBox").style.display = "block";
+      loadLicenses();
+    }
+
+    function showLogin() {
+      document.getElementById("loginBox").style.display = "block";
+      document.getElementById("adminBox").style.display = "none";
+    }
+
+    async function loginAdmin() {
+      const input = document.getElementById("adminPassword").value.trim();
+      if (!input) {
+        document.getElementById("loginResult").innerText = "Digite a senha.";
+        return;
+      }
+
+      adminPassword = input;
+      localStorage.setItem("adminPassword", adminPassword);
+
+      const res = await fetch("/api/licenses", {
+        method: "GET",
+        headers: {
+          "x-admin-password": adminPassword
+        }
+      });
+
+      if (res.status === 401) {
+        document.getElementById("loginResult").innerText = "Senha inválida.";
+        localStorage.removeItem("adminPassword");
+        adminPassword = "";
+        return;
+      }
+
+      showAdmin();
+    }
+
+    function logoutAdmin() {
+      localStorage.removeItem("adminPassword");
+      adminPassword = "";
+      showLogin();
+    }
+
+    async function loadLicenses() {
+      const res = await fetch("/api/licenses", {
+        method: "GET",
+        headers: {
+          "x-admin-password": adminPassword
+        }
+      });
+
+      if (res.status === 401) {
+        logoutAdmin();
+        return;
+      }
+
+      const data = await res.json();
+      const container = document.getElementById("licenses");
+      container.innerHTML = "";
+
+      if (!data.length) {
+        container.innerHTML = '<div class="muted">Nenhuma key encontrada.</div>';
+        return;
+      }
+
+      data.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "card";
+
+        div.innerHTML = `
+          <div class="row">
+            <div>
+              <div><strong>${item.key}</strong></div>
+              <div class="muted">Criada em: ${item.createdAt || "-"}</div>
+            </div>
+
+            <div>
+              <div><strong>Status</strong></div>
+              <div class="${item.active ? "status-on" : "status-off"}">
+                ${item.active ? "ATIVA" : "DESATIVADA"}
+              </div>
+            </div>
+
+            <div>
+              <div><strong>Discord ID</strong></div>
+              <div class="muted">${item.discordId || "Não vinculado"}</div>
+            </div>
+
+            <div>
+              <div><strong>HWID</strong></div>
+              <div class="muted" style="word-break:break-all;">${item.hwid || "Não vinculado"}</div>
+            </div>
+
+            <div class="actions">
+              <button class="yellow" onclick="toggleKey('${item.key}')">Ativar/Desativar</button>
+              <button onclick="resetHwid('${item.key}')">Reset HWID</button>
+              <button class="danger" onclick="deleteKey('${item.key}')">Excluir</button>
+            </div>
+          </div>
+        `;
+
+        container.appendChild(div);
+      });
+    }
+
+    async function createKey() {
+      const res = await fetch("/api/licenses/create", {
+        method: "POST",
+        headers: getHeaders()
+      });
+
+      const data = await res.json();
+      document.getElementById("result").innerText = data.success
+        ? "Key criada: " + data.key
+        : (data.error || "Erro ao criar key");
+
+      loadLicenses();
+    }
+
+    async function toggleKey(key) {
+      const res = await fetch("/api/licenses/toggle", {
+        method: "POST",
+        headers: getHeaders(),
+        body: JSON.stringify({ key })
+      });
+
+      const data = await res.json();
+      document.getElementById("result").innerText = data.success
+        ? "Status alterado: " + key
+        : (data.error || "Erro ao alterar status");
+
+      loadLicenses();
+    }
+
+    async function resetHwid(key) {
+      const res = await fetch("/api/licenses/reset-hwid", {
+        method: "POST",
+        headers: getHeaders(),
+        body: JSON.stringify({ key })
+      });
+
+      const data = await res.json();
+      document.getElementById("result").innerText = data.success
+        ? "HWID resetado: " + key
+        : (data.error || "Erro ao resetar HWID");
+
+      loadLicenses();
+    }
+
+    async function deleteKey(key) {
+      const ok = confirm("Quer mesmo excluir essa key?");
+      if (!ok) return;
+
+      const res = await fetch("/api/licenses/delete", {
+        method: "POST",
+        headers: getHeaders(),
+        body: JSON.stringify({ key })
+      });
+
+      const data = await res.json();
+      document.getElementById("result").innerText = data.success
+        ? "Key excluída: " + key
+        : (data.error || "Erro ao excluir key");
+
+      loadLicenses();
+    }
+
+    if (adminPassword) {
+      loginAdmin();
+    }
+  </script>
+</body>
+</html>
