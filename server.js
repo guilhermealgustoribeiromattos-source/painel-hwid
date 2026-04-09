@@ -105,8 +105,8 @@ res.send(`
     </head>
     <body>
       <div class="box">
-        <h2>Discord verificado com sucesso</h2>
-        <div class="muted">Redirecionando... não atualize a página.</div>
+        <h2>Discord Verificado com Sucesso</h2>
+        <div class="muted">Redirecionando... Não Atualize a Página.</div>
       </div>
       <script>
         setTimeout(() => {
@@ -274,5 +274,5 @@ app.get("/admin", (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log("rodando na porta " + PORT);
+  console.log("Rodando na Porta " + PORT);
 });
