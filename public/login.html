@@ -489,7 +489,11 @@
     if (savedKey) keyInput.value = savedKey;
 
     const savedName = localStorage.getItem("gzn_discord_name");
-    if (savedName) sessionName.textContent = savedName;
+const savedAvatar = localStorage.getItem("gzn_discord_avatar");
+const avatarImg = document.getElementById("avatar");
+
+if (savedName) sessionName.textContent = savedName;
+if (savedAvatar) avatarImg.src = savedAvatar;
 
     function loginDiscord() {
       window.location.href = "/login";
@@ -506,14 +510,10 @@
     const token = params.get("token");
 
     if (token) {
-      localStorage.setItem("gzn_token", token);
-      showToast();
-
-      if (!localStorage.getItem("gzn_discord_name")) {
-        localStorage.setItem("gzn_discord_name", "Discord Sincronizado");
-        sessionName.textContent = "Discord Sincronizado";
-      }
-    }
+  localStorage.setItem("gzn_token", token);
+  showToast();
+  carregarSessaoDiscord(token);
+}
 
     async function entrarPainel() {
       const finalToken = localStorage.getItem("gzn_token");
