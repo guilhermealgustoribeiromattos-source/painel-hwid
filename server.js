@@ -132,37 +132,30 @@ app.post("/auth", (req, res) => {
   const { token, hwid, key } = req.body;
 
   const data = tokens[token];
-  if (!data) return res.json({ success: false, error: "Token Inválido" });
+  if (!data) return res.json({ success: false, error: "Token inválido" });
 
   if (Date.now() > data.expires) {
     delete tokens[token];
-    return res.json({ success: false, error: "Token Expirado" });
+    return res.json({ success: false, error: "Token expirado" });
   }
 
-  const discordId = data.discordId;
   const license = licenses[key];
-
   if (!license) {
-    return res.json({ success: false, error: "Key Inválida" });
+    return res.json({ success: false, error: "Key inválida" });
   }
 
-  if (!license.active) {
-    return res.json({ success: false, error: "Key Desativada" });
-  }
-
+  // primeira vez usando
   if (!license.hwid) {
     license.hwid = hwid;
-    license.discordId = discordId;
-    return res.json({ success: true, firstBind: true });
+    license.discordId = data.discordId;
+  } else {
+    if (license.hwid !== hwid) {
+      return res.json({ success: false, error: "HWID diferente" });
+    }
   }
 
-  if (license.hwid !== hwid) {
-    return res.json({ success: false, error: "HWID Diferente" });
-  }
-
-  return res.json({ success: true });
+  res.json({ success: true });
 });
-
 // ========= ADMIN =========
 function checkAdmin(req, res, next) {
   const password = req.headers["x-admin-password"];
