@@ -199,52 +199,65 @@ app.post("/auth", async (req, res) => {
   try {
     const { token, key, hwid } = req.body;
 
+    if (!token || !key) {
+      return res.json({ success: false, error: "Token ou Key Ausente" });
+    }
+
     const tokenData = tokens[token];
     if (!tokenData) {
-      return res.json({ success: false, error: "Token inválido" });
+      return res.json({ success: false, error: "Token Inválido" });
     }
 
     if (Date.now() > tokenData.expires) {
       delete tokens[token];
-      return res.json({ success: false, error: "Token expirado" });
+      return res.json({ success: false, error: "Token Expirado" });
     }
 
     const license = await License.findOne({ key });
 
     if (!license) {
-      return res.json({ success: false, error: "Key inválida" });
+      return res.json({ success: false, error: "Key Inválida" });
     }
 
     if (!license.active) {
-      return res.json({ success: false, error: "Key desativada" });
+      return res.json({ success: false, error: "Key Desativada" });
     }
 
-    const isWeb = typeof hwid === "string" && hwid.startsWith("WEB-");
+    const isWeb = !hwid || String(hwid).startsWith("WEB-");
 
+    // SITE: só valida Discord + key
     if (isWeb) {
-      return res.json({ success: true, webOnly: true });
+      return res.json({
+        success: true,
+        webOnly: true,
+        message: "Login Web Validado"
+      });
     }
 
+    // APP: valida HWID real
     if (!license.hwid) {
       license.hwid = hwid;
       license.discordId = tokenData.discordId;
       license.discordUsername = tokenData.username;
       await license.save();
 
-      return res.json({ success: true, firstBind: true });
+      return res.json({
+        success: true,
+        firstBind: true,
+        message: "HWID Vinculado com Sucesso"
+      });
     }
 
     if (license.hwid !== hwid) {
-      return res.json({ success: false, error: "HWID diferente" });
+      return res.json({ success: false, error: "HWID Diferente" });
     }
 
-    return res.json({ success: true });
+    return res.json({ success: true, message: "Login Autorizado" });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ success: false, error: "Erro interno" });
+    console.error("ERRO /auth:", err);
+    return res.status(500).json({ success: false, error: "Erro Interno" });
   }
 });
-
     // Primeiro vínculo
     if (!license.hwid) {
       license.hwid = hwid;
