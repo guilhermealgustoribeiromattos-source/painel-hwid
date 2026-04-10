@@ -68,7 +68,7 @@ app.get("/login", (req, res) => {
 app.get("/callback", async (req, res) => {
   try {
     const code = req.query.code;
-    if (!code) return res.status(400).send("Code não recebido.");
+    if (!code) return res.status(400).send("Code não Recebido.");
 
     const tokenRes = await axios.post(
       "https://discord.com/api/oauth2/token",
@@ -107,7 +107,7 @@ app.get("/callback", async (req, res) => {
         <body style="margin:0;background:#08111f;color:white;font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;">
           <div style="text-align:center;padding:30px;border-radius:18px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);">
             <h2>Discord verificado com sucesso</h2>
-            <div style="color:#8ea0c8;margin-top:10px;">Redirecionando... não atualize a página.</div>
+            <div style="color:#8ea0c8;margin-top:10px;">Redirecionando... Não Atualize a Página.</div>
           </div>
           <script>
             setTimeout(() => {
@@ -123,20 +123,20 @@ app.get("/callback", async (req, res) => {
       return res.status(500).json(err.response.data);
     }
     console.error(err);
-    return res.status(500).send("Erro interno no callback.");
+    return res.status(500).send("Erro Interno no Callback.");
   }
 });
 
 app.get("/session", (req, res) => {
   const token = req.query.token;
   if (!token || !tokens[token]) {
-    return res.json({ success: false, error: "Sessão não encontrada" });
+    return res.json({ success: false, error: "Sessão não Encontrada" });
   }
 
   const data = tokens[token];
   if (Date.now() > data.expires) {
     delete tokens[token];
-    return res.json({ success: false, error: "Sessão expirada" });
+    return res.json({ success: false, error: "Sessão Expirada" });
   }
 
   res.json({
@@ -152,31 +152,31 @@ app.post("/auth", async (req, res) => {
     const { token, key, hwid } = req.body;
 
     if (!token || !key) {
-      return res.json({ success: false, error: "Token ou Key ausente" });
+      return res.json({ success: false, error: "Token ou Key Ausente" });
     }
 
     const tokenData = tokens[token];
     if (!tokenData) {
-      return res.json({ success: false, error: "Token inválido" });
+      return res.json({ success: false, error: "Token Inválido" });
     }
 
     if (Date.now() > tokenData.expires) {
       delete tokens[token];
-      return res.json({ success: false, error: "Token expirado" });
+      return res.json({ success: false, error: "Token Expirado" });
     }
 
     const license = await License.findOne({ key });
     if (!license) {
-      return res.json({ success: false, error: "Key inválida" });
+      return res.json({ success: false, error: "Key Inválida" });
     }
 
     if (!license.active) {
-      return res.json({ success: false, error: "Key desativada" });
+      return res.json({ success: false, error: "Key Desativada" });
     }
 
     const isWeb = !hwid || String(hwid).startsWith("WEB-");
     if (isWeb) {
-      return res.json({ success: true, webOnly: true, message: "Login web validado" });
+      return res.json({ success: true, webOnly: true, message: "Login Web Validado" });
     }
 
     if (!license.hwid) {
@@ -185,21 +185,21 @@ app.post("/auth", async (req, res) => {
       license.discordUsername = tokenData.username;
       await license.save();
 
-      return res.json({ success: true, firstBind: true, message: "HWID vinculado com sucesso" });
+      return res.json({ success: true, firstBind: true, message: "HWID Vinculado com Sucesso" });
     }
 
     if (license.hwid !== hwid) {
-      return res.json({ success: false, error: "HWID diferente" });
+      return res.json({ success: false, error: "HWID Diferente" });
     }
 
     if (license.discordId && license.discordId !== tokenData.discordId) {
-      return res.json({ success: false, error: "Discord diferente do vinculado" });
+      return res.json({ success: false, error: "Discord Diferente do Vinculado" });
     }
 
-    return res.json({ success: true, message: "Login autorizado" });
+    return res.json({ success: true, message: "Login Autorizado" });
   } catch (err) {
     console.error("ERRO /auth:", err);
-    return res.status(500).json({ success: false, error: "Erro interno" });
+    return res.status(500).json({ success: false, error: "Erro Interno" });
   }
 });
 
@@ -208,7 +208,7 @@ app.get("/api/licenses", checkAdmin, async (req, res) => {
     const list = await License.find().sort({ createdAt: -1 });
     res.json(list);
   } catch {
-    res.status(500).json({ success: false, error: "Erro ao buscar keys" });
+    res.status(500).json({ success: false, error: "Erro ao Buscar Keys" });
   }
 });
 
@@ -224,7 +224,7 @@ app.post("/api/licenses/create", checkAdmin, async (req, res) => {
     });
     res.json({ success: true, key });
   } catch {
-    res.status(500).json({ success: false, error: "Erro ao criar key" });
+    res.status(500).json({ success: false, error: "Erro ao Criar Key" });
   }
 });
 
@@ -234,14 +234,14 @@ app.post("/api/licenses/toggle", checkAdmin, async (req, res) => {
     const license = await License.findOne({ key });
 
     if (!license) {
-      return res.json({ success: false, error: "Key não encontrada" });
+      return res.json({ success: false, error: "Key não Encontrada" });
     }
 
     license.active = !license.active;
     await license.save();
     res.json({ success: true, active: license.active });
   } catch {
-    res.status(500).json({ success: false, error: "Erro ao alterar key" });
+    res.status(500).json({ success: false, error: "Erro ao Alterar Key" });
   }
 });
 
@@ -251,7 +251,7 @@ app.post("/api/licenses/reset-hwid", checkAdmin, async (req, res) => {
     const license = await License.findOne({ key });
 
     if (!license) {
-      return res.json({ success: false, error: "Key não encontrada" });
+      return res.json({ success: false, error: "Key não Encontrada" });
     }
 
     license.hwid = null;
@@ -260,7 +260,7 @@ app.post("/api/licenses/reset-hwid", checkAdmin, async (req, res) => {
     await license.save();
     res.json({ success: true });
   } catch {
-    res.status(500).json({ success: false, error: "Erro ao resetar HWID" });
+    res.status(500).json({ success: false, error: "Erro ao Resetar HWID" });
   }
 });
 
@@ -270,12 +270,12 @@ app.post("/api/licenses/delete", checkAdmin, async (req, res) => {
     const result = await License.deleteOne({ key });
 
     if (result.deletedCount === 0) {
-      return res.json({ success: false, error: "Key não encontrada" });
+      return res.json({ success: false, error: "Key não Encontrada" });
     }
 
     res.json({ success: true });
   } catch {
-    res.status(500).json({ success: false, error: "Erro ao excluir key" });
+    res.status(500).json({ success: false, error: "Erro ao Excluir Key" });
   }
 });
 
