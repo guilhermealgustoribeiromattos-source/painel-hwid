@@ -16,9 +16,6 @@ const REDIRECT_URI = process.env.REDIRECT_URI;
 const MONGODB_URI = process.env.MONGODB_URI;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
-// =========================
-// MongoDB
-// =========================
 mongoose.connect(MONGODB_URI)
   .then(() => console.log("MongoDB conectado"))
   .catch((err) => console.error("Erro MongoDB:", err));
@@ -33,13 +30,8 @@ const licenseSchema = new mongoose.Schema({
 });
 
 const License = mongoose.model("License", licenseSchema);
-
-// token temporário pós login Discord
 const tokens = {};
 
-// =========================
-// Helpers
-// =========================
 function generateKey() {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   const part = () =>
@@ -55,9 +47,6 @@ function checkAdmin(req, res, next) {
   next();
 }
 
-// =========================
-// Pages
-// =========================
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "login.html"));
 });
@@ -66,9 +55,6 @@ app.get("/admin", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "admin.html"));
 });
 
-// =========================
-// Discord OAuth
-// =========================
 app.get("/login", (req, res) => {
   const url =
     `https://discord.com/api/oauth2/authorize` +
@@ -82,9 +68,7 @@ app.get("/login", (req, res) => {
 app.get("/callback", async (req, res) => {
   try {
     const code = req.query.code;
-    if (!code) {
-      return res.status(400).send("Code não recebido.");
-    }
+    if (!code) return res.status(400).send("Code não recebido.");
 
     const tokenRes = await axios.post(
       "https://discord.com/api/oauth2/token",
@@ -95,9 +79,7 @@ app.get("/callback", async (req, res) => {
         code,
         redirect_uri: REDIRECT_URI
       }),
-      {
-        headers: { "Content-Type": "application/x-www-form-urlencoded" }
-      }
+      { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
     );
 
     const userRes = await axios.get("https://discord.com/api/users/@me", {
@@ -121,36 +103,11 @@ app.get("/callback", async (req, res) => {
 
     res.send(`
       <html>
-        <head>
-          <title>Verificando Discord</title>
-          <style>
-            body {
-              margin:0;
-              background:#08111f;
-              color:white;
-              font-family:Arial,sans-serif;
-              display:flex;
-              align-items:center;
-              justify-content:center;
-              height:100vh;
-            }
-            .box {
-              text-align:center;
-              padding:30px;
-              border-radius:18px;
-              background:rgba(255,255,255,0.04);
-              border:1px solid rgba(255,255,255,0.08);
-            }
-            .muted {
-              color:#8ea0c8;
-              margin-top:10px;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="box">
+        <head><title>Verificando Discord</title></head>
+        <body style="margin:0;background:#08111f;color:white;font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;">
+          <div style="text-align:center;padding:30px;border-radius:18px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);">
             <h2>Discord verificado com sucesso</h2>
-            <div class="muted">Redirecionando... não atualize a página.</div>
+            <div style="color:#8ea0c8;margin-top:10px;">Redirecionando... não atualize a página.</div>
           </div>
           <script>
             setTimeout(() => {
@@ -172,13 +129,11 @@ app.get("/callback", async (req, res) => {
 
 app.get("/session", (req, res) => {
   const token = req.query.token;
-
   if (!token || !tokens[token]) {
     return res.json({ success: false, error: "Sessão não encontrada" });
   }
 
   const data = tokens[token];
-
   if (Date.now() > data.expires) {
     delete tokens[token];
     return res.json({ success: false, error: "Sessão expirada" });
@@ -192,9 +147,6 @@ app.get("/session", (req, res) => {
   });
 });
 
-// =========================
-// Auth final (KEY + HWID)
-// =========================
 app.post("/auth", async (req, res) => {
   try {
     const { token, key, hwid } = req.body;
@@ -214,7 +166,6 @@ app.post("/auth", async (req, res) => {
     }
 
     const license = await License.findOne({ key });
-
     if (!license) {
       return res.json({ success: false, error: "Key inválida" });
     }
@@ -224,28 +175,17 @@ app.post("/auth", async (req, res) => {
     }
 
     const isWeb = !hwid || String(hwid).startsWith("WEB-");
-
-    // SITE: só valida Discord + key
     if (isWeb) {
-      return res.json({
-        success: true,
-        webOnly: true,
-        message: "Login web validado"
-      });
+      return res.json({ success: true, webOnly: true, message: "Login web validado" });
     }
 
-    // APP: valida HWID real
     if (!license.hwid) {
       license.hwid = hwid;
       license.discordId = tokenData.discordId;
       license.discordUsername = tokenData.username;
       await license.save();
 
-      return res.json({
-        success: true,
-        firstBind: true,
-        message: "HWID vinculado com sucesso"
-      });
+      return res.json({ success: true, firstBind: true, message: "HWID vinculado com sucesso" });
     }
 
     if (license.hwid !== hwid) {
@@ -263,9 +203,6 @@ app.post("/auth", async (req, res) => {
   }
 });
 
-// =========================
-// Admin API
-// =========================
 app.get("/api/licenses", checkAdmin, async (req, res) => {
   try {
     const list = await License.find().sort({ createdAt: -1 });
@@ -278,7 +215,6 @@ app.get("/api/licenses", checkAdmin, async (req, res) => {
 app.post("/api/licenses/create", checkAdmin, async (req, res) => {
   try {
     const key = generateKey();
-
     await License.create({
       key,
       hwid: null,
@@ -286,7 +222,6 @@ app.post("/api/licenses/create", checkAdmin, async (req, res) => {
       discordUsername: null,
       active: true
     });
-
     res.json({ success: true, key });
   } catch {
     res.status(500).json({ success: false, error: "Erro ao criar key" });
@@ -304,7 +239,6 @@ app.post("/api/licenses/toggle", checkAdmin, async (req, res) => {
 
     license.active = !license.active;
     await license.save();
-
     res.json({ success: true, active: license.active });
   } catch {
     res.status(500).json({ success: false, error: "Erro ao alterar key" });
@@ -324,7 +258,6 @@ app.post("/api/licenses/reset-hwid", checkAdmin, async (req, res) => {
     license.discordId = null;
     license.discordUsername = null;
     await license.save();
-
     res.json({ success: true });
   } catch {
     res.status(500).json({ success: false, error: "Erro ao resetar HWID" });
