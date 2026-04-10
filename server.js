@@ -200,27 +200,27 @@ app.post("/auth", async (req, res) => {
     const { token, key, hwid } = req.body;
 
     if (!token || !key) {
-      return res.json({ success: false, error: "Token ou Key Ausente" });
+      return res.json({ success: false, error: "Token ou Key ausente" });
     }
 
     const tokenData = tokens[token];
     if (!tokenData) {
-      return res.json({ success: false, error: "Token Inválido" });
+      return res.json({ success: false, error: "Token inválido" });
     }
 
     if (Date.now() > tokenData.expires) {
       delete tokens[token];
-      return res.json({ success: false, error: "Token Expirado" });
+      return res.json({ success: false, error: "Token expirado" });
     }
 
     const license = await License.findOne({ key });
 
     if (!license) {
-      return res.json({ success: false, error: "Key Inválida" });
+      return res.json({ success: false, error: "Key inválida" });
     }
 
     if (!license.active) {
-      return res.json({ success: false, error: "Key Desativada" });
+      return res.json({ success: false, error: "Key desativada" });
     }
 
     const isWeb = !hwid || String(hwid).startsWith("WEB-");
@@ -230,7 +230,7 @@ app.post("/auth", async (req, res) => {
       return res.json({
         success: true,
         webOnly: true,
-        message: "Login Web Validado"
+        message: "Login web validado"
       });
     }
 
@@ -244,43 +244,21 @@ app.post("/auth", async (req, res) => {
       return res.json({
         success: true,
         firstBind: true,
-        message: "HWID Vinculado com Sucesso"
+        message: "HWID vinculado com sucesso"
       });
     }
 
     if (license.hwid !== hwid) {
-      return res.json({ success: false, error: "HWID Diferente" });
-    }
-
-    return res.json({ success: true, message: "Login Autorizado" });
-  } catch (err) {
-    console.error("ERRO /auth:", err);
-    return res.status(500).json({ success: false, error: "Erro Interno" });
-  }
-});
-    // Primeiro vínculo
-    if (!license.hwid) {
-      license.hwid = hwid;
-      license.discordId = tokenData.discordId;
-      license.discordUsername = tokenData.username;
-      await license.save();
-
-      return res.json({ success: true, firstBind: true });
-    }
-
-    // HWID diferente
-    if (license.hwid !== hwid) {
       return res.json({ success: false, error: "HWID diferente" });
     }
 
-    // Opcional: amarrar ao mesmo Discord também
     if (license.discordId && license.discordId !== tokenData.discordId) {
       return res.json({ success: false, error: "Discord diferente do vinculado" });
     }
 
-    return res.json({ success: true });
+    return res.json({ success: true, message: "Login autorizado" });
   } catch (err) {
-    console.error(err);
+    console.error("ERRO /auth:", err);
     return res.status(500).json({ success: false, error: "Erro interno" });
   }
 });
@@ -368,20 +346,6 @@ app.post("/api/licenses/delete", checkAdmin, async (req, res) => {
   }
 });
 
-const express = require("express");
-const path = require("path");
-
-const app = express();
-
-// SERVIR ARQUIVOS
-app.use(express.static(path.join(__dirname, "public")));
-
-// ROTA PRINCIPAL (ESSA QUE RESOLVE SEU 404)
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "login.html"));
-});
-
-// PORTA
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log("rodando na porta " + PORT);
