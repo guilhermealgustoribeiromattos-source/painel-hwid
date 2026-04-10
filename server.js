@@ -199,10 +199,6 @@ app.post("/auth", async (req, res) => {
   try {
     const { token, key, hwid } = req.body;
 
-    if (!token || !key || !hwid) {
-      return res.status(400).json({ success: false, error: "Dados incompletos" });
-    }
-
     const tokenData = tokens[token];
     if (!tokenData) {
       return res.json({ success: false, error: "Token inválido" });
@@ -222,6 +218,32 @@ app.post("/auth", async (req, res) => {
     if (!license.active) {
       return res.json({ success: false, error: "Key desativada" });
     }
+
+    const isWeb = typeof hwid === "string" && hwid.startsWith("WEB-");
+
+    if (isWeb) {
+      return res.json({ success: true, webOnly: true });
+    }
+
+    if (!license.hwid) {
+      license.hwid = hwid;
+      license.discordId = tokenData.discordId;
+      license.discordUsername = tokenData.username;
+      await license.save();
+
+      return res.json({ success: true, firstBind: true });
+    }
+
+    if (license.hwid !== hwid) {
+      return res.json({ success: false, error: "HWID diferente" });
+    }
+
+    return res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ success: false, error: "Erro interno" });
+  }
+});
 
     // Primeiro vínculo
     if (!license.hwid) {
