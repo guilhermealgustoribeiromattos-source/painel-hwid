@@ -368,6 +368,12 @@ app.post("/api/licenses/delete", checkAdmin, async (req, res) => {
   }
 });
 
+app.use(express.static(path.join(__dirname, "public")));
+
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "login.html"));
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log("rodando na porta " + PORT);
