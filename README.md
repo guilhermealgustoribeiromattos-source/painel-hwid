@@ -1,3 +1,3 @@
 git add .
-git commit -m "sistema completo base"
+git commit -m "corrige package lock"
 git push
