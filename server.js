@@ -48,7 +48,7 @@ function checkAdmin(req, res, next) {
 }
 
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "login.html"));
+  res.redirect("/login.html");
 });
 
 app.get("/admin", (req, res) => {
