@@ -1,45 +1,90 @@
 const express = require("express");
 const axios = require("axios");
 const cors = require("cors");
+const mongoose = require("mongoose");
 const path = require("path");
 
 const app = express();
+
 app.use(express.json());
 app.use(cors());
 app.use(express.static(path.join(__dirname, "public")));
 
-let tokens = {};
-
-let licenses = {
-  "GZN-TESTE-1234": {
-    hwid: null,
-    discordId: null,
-    active: true,
-    createdAt: new Date().toISOString()
-  }
-};
-
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
-const REDIRECT_URI = "https://painel-hwid-production.up.railway.app/callback";
+const REDIRECT_URI = process.env.REDIRECT_URI;
+const MONGODB_URI = process.env.MONGODB_URI;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
-// SENHA DO ADMIN
-const ADMIN_PASSWORD = "Gzn@Admin#9482";
+// =========================
+// MongoDB
+// =========================
+mongoose.connect(MONGODB_URI)
+  .then(() => console.log("MongoDB conectado"))
+  .catch((err) => console.error("Erro MongoDB:", err));
 
-app.use(express.static(path.join(__dirname, "public")));
+const licenseSchema = new mongoose.Schema({
+  key: { type: String, required: true, unique: true },
+  hwid: { type: String, default: null },
+  discordId: { type: String, default: null },
+  discordUsername: { type: String, default: null },
+  active: { type: Boolean, default: true },
+  createdAt: { type: Date, default: Date.now }
+});
 
+const License = mongoose.model("License", licenseSchema);
+
+// token temporário pós login Discord
+const tokens = {};
+
+// =========================
+// Helpers
+// =========================
+function generateKey() {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  const part = () =>
+    Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+  return `GZN-${part()}-${part()}-${part()}`;
+}
+
+function checkAdmin(req, res, next) {
+  const password = req.headers["x-admin-password"];
+  if (password !== ADMIN_PASSWORD) {
+    return res.status(401).json({ success: false, error: "Senha admin inválida" });
+  }
+  next();
+}
+
+// =========================
+// Pages
+// =========================
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "login.html"));
 });
-// ========= LOGIN DISCORD =========
+
+app.get("/admin", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "admin.html"));
+});
+
+// =========================
+// Discord OAuth
+// =========================
 app.get("/login", (req, res) => {
-  const url = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify`;
+  const url =
+    `https://discord.com/api/oauth2/authorize` +
+    `?client_id=${encodeURIComponent(CLIENT_ID)}` +
+    `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
+    `&response_type=code` +
+    `&scope=identify`;
   res.redirect(url);
 });
 
 app.get("/callback", async (req, res) => {
   try {
     const code = req.query.code;
+    if (!code) {
+      return res.status(400).send("Code não recebido.");
+    }
 
     const tokenRes = await axios.post(
       "https://discord.com/api/oauth2/token",
@@ -60,179 +105,71 @@ app.get("/callback", async (req, res) => {
     });
 
     const user = userRes.data;
-const loginToken = Math.random().toString(36).substring(2);
+    const loginToken = Math.random().toString(36).slice(2);
 
-let avatarUrl = "/img/default-avatar.png";
+    let avatarUrl = "/img/default-avatar.png";
+    if (user.avatar) {
+      avatarUrl = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=256`;
+    }
 
-if (user.avatar) {
-  avatarUrl = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=256`;
-}
+    tokens[loginToken] = {
+      discordId: user.id,
+      username: user.username,
+      avatar: avatarUrl,
+      expires: Date.now() + 1000 * 60 * 5
+    };
 
-tokens[loginToken] = {
-  discordId: user.id,
-  username: user.username,
-  avatar: avatarUrl,
-  expires: Date.now() + 1000 * 60 * 5
-};
-
-res.send(`
-  <html>
-    <head>
-      <title>Verificando Discord</title>
-      <style>
-        body {
-          margin: 0;
-          background: #08111f;
-          color: white;
-          font-family: Arial, sans-serif;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          height: 100vh;
-        }
-        .box {
-          text-align: center;
-          padding: 30px;
-          border-radius: 18px;
-          background: rgba(255,255,255,0.04);
-          border: 1px solid rgba(255,255,255,0.08);
-        }
-        .muted {
-          color: #8ea0c8;
-          margin-top: 10px;
-        }
-      </style>
-    </head>
-    <body>
-      <div class="box">
-        <h2>Discord Verificado com Sucesso</h2>
-        <div class="muted">Redirecionando... Não Atualize a Página.</div>
-      </div>
-      <script>
-        setTimeout(() => {
-          window.location.href = "/?token=${loginToken}";
-        }, 1200);
-      </script>
-    </body>
-  </html>
-`);
+    res.send(`
+      <html>
+        <head>
+          <title>Verificando Discord</title>
+          <style>
+            body {
+              margin:0;
+              background:#08111f;
+              color:white;
+              font-family:Arial,sans-serif;
+              display:flex;
+              align-items:center;
+              justify-content:center;
+              height:100vh;
+            }
+            .box {
+              text-align:center;
+              padding:30px;
+              border-radius:18px;
+              background:rgba(255,255,255,0.04);
+              border:1px solid rgba(255,255,255,0.08);
+            }
+            .muted {
+              color:#8ea0c8;
+              margin-top:10px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="box">
+            <h2>Discord verificado com sucesso</h2>
+            <div class="muted">Redirecionando... não atualize a página.</div>
+          </div>
+          <script>
+            setTimeout(() => {
+              window.location.href = "/?token=${loginToken}";
+            }, 1200);
+          </script>
+        </body>
+      </html>
+    `);
   } catch (err) {
     if (err.response) {
-      console.log("Erro Discord:", err.response.status, err.response.data);
-      res.send(`<pre>${JSON.stringify(err.response.data, null, 2)}</pre>`);
-    } else {
-      console.log("Erro:", err.message);
-      res.send(`<pre>${err.message}</pre>`);
+      console.error("Erro Discord:", err.response.status, err.response.data);
+      return res.status(500).json(err.response.data);
     }
+    console.error(err);
+    return res.status(500).send("Erro interno no callback.");
   }
 });
 
-// ========= KEY SYSTEM =========
-app.post("/auth", (req, res) => {
-  const { token, hwid, key } = req.body;
-
-  const data = tokens[token];
-  if (!data) return res.json({ success: false, error: "Token inválido" });
-
-  if (Date.now() > data.expires) {
-    delete tokens[token];
-    return res.json({ success: false, error: "Token expirado" });
-  }
-
-  const license = licenses[key];
-  if (!license) {
-    return res.json({ success: false, error: "Key inválida" });
-  }
-
-  // primeira vez usando
-  if (!license.hwid) {
-    license.hwid = hwid;
-    license.discordId = data.discordId;
-  } else {
-    if (license.hwid !== hwid) {
-      return res.json({ success: false, error: "HWID diferente" });
-    }
-  }
-
-  res.json({ success: true });
-});
-// ========= ADMIN =========
-function checkAdmin(req, res, next) {
-  const password = req.headers["x-admin-password"];
-  if (password !== ADMIN_PASSWORD) {
-    return res.status(401).json({ success: false, error: "Senha Admin Inválida" });
-  }
-  next();
-}
-
-function generateKey() {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  const part = () =>
-    Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
-  return `GZN-${part()}-${part()}-${part()}`;
-}
-
-app.get("/api/licenses", checkAdmin, (req, res) => {
-  const list = Object.entries(licenses).map(([key, value]) => ({
-    key,
-    ...value
-  }));
-  res.json(list);
-});
-
-app.post("/api/licenses/create", checkAdmin, (req, res) => {
-  const key = generateKey();
-
-  licenses[key] = {
-    hwid: null,
-    discordId: null,
-    active: true,
-    createdAt: new Date().toISOString()
-  };
-
-  res.json({ success: true, key });
-});
-
-app.post("/api/licenses/toggle", checkAdmin, (req, res) => {
-  const { key } = req.body;
-
-  if (!licenses[key]) {
-    return res.json({ success: false, error: "Key Não Encontrada" });
-  }
-
-  licenses[key].active = !licenses[key].active;
-  res.json({ success: true, active: licenses[key].active });
-});
-
-app.post("/api/licenses/reset-hwid", checkAdmin, (req, res) => {
-  const { key } = req.body;
-
-  if (!licenses[key]) {
-    return res.json({ success: false, error: "Key Não Encontrada" });
-  }
-
-  licenses[key].hwid = null;
-  licenses[key].discordId = null;
-
-  res.json({ success: true });
-});
-
-app.post("/api/licenses/delete", checkAdmin, (req, res) => {
-  const { key } = req.body;
-
-  if (!licenses[key]) {
-    return res.json({ success: false, error: "Key não encontrada" });
-  }
-
-  delete licenses[key];
-  res.json({ success: true });
-});
-
-app.use(express.static(path.join(__dirname, "public")));
-
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "login.html"));
-});
 app.get("/session", (req, res) => {
   const token = req.query.token;
 
@@ -255,17 +192,148 @@ app.get("/session", (req, res) => {
   });
 });
 
-app.use(express.static(path.join(__dirname, "public")));
+// =========================
+// Auth final (KEY + HWID)
+// =========================
+app.post("/auth", async (req, res) => {
+  try {
+    const { token, key, hwid } = req.body;
 
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "login.html"));
+    if (!token || !key || !hwid) {
+      return res.status(400).json({ success: false, error: "Dados incompletos" });
+    }
+
+    const tokenData = tokens[token];
+    if (!tokenData) {
+      return res.json({ success: false, error: "Token inválido" });
+    }
+
+    if (Date.now() > tokenData.expires) {
+      delete tokens[token];
+      return res.json({ success: false, error: "Token expirado" });
+    }
+
+    const license = await License.findOne({ key });
+
+    if (!license) {
+      return res.json({ success: false, error: "Key inválida" });
+    }
+
+    if (!license.active) {
+      return res.json({ success: false, error: "Key desativada" });
+    }
+
+    // Primeiro vínculo
+    if (!license.hwid) {
+      license.hwid = hwid;
+      license.discordId = tokenData.discordId;
+      license.discordUsername = tokenData.username;
+      await license.save();
+
+      return res.json({ success: true, firstBind: true });
+    }
+
+    // HWID diferente
+    if (license.hwid !== hwid) {
+      return res.json({ success: false, error: "HWID diferente" });
+    }
+
+    // Opcional: amarrar ao mesmo Discord também
+    if (license.discordId && license.discordId !== tokenData.discordId) {
+      return res.json({ success: false, error: "Discord diferente do vinculado" });
+    }
+
+    return res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ success: false, error: "Erro interno" });
+  }
 });
 
-app.get("/admin", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "admin.html"));
+// =========================
+// Admin API
+// =========================
+app.get("/api/licenses", checkAdmin, async (req, res) => {
+  try {
+    const list = await License.find().sort({ createdAt: -1 });
+    res.json(list);
+  } catch {
+    res.status(500).json({ success: false, error: "Erro ao buscar keys" });
+  }
+});
+
+app.post("/api/licenses/create", checkAdmin, async (req, res) => {
+  try {
+    const key = generateKey();
+
+    await License.create({
+      key,
+      hwid: null,
+      discordId: null,
+      discordUsername: null,
+      active: true
+    });
+
+    res.json({ success: true, key });
+  } catch {
+    res.status(500).json({ success: false, error: "Erro ao criar key" });
+  }
+});
+
+app.post("/api/licenses/toggle", checkAdmin, async (req, res) => {
+  try {
+    const { key } = req.body;
+    const license = await License.findOne({ key });
+
+    if (!license) {
+      return res.json({ success: false, error: "Key não encontrada" });
+    }
+
+    license.active = !license.active;
+    await license.save();
+
+    res.json({ success: true, active: license.active });
+  } catch {
+    res.status(500).json({ success: false, error: "Erro ao alterar key" });
+  }
+});
+
+app.post("/api/licenses/reset-hwid", checkAdmin, async (req, res) => {
+  try {
+    const { key } = req.body;
+    const license = await License.findOne({ key });
+
+    if (!license) {
+      return res.json({ success: false, error: "Key não encontrada" });
+    }
+
+    license.hwid = null;
+    license.discordId = null;
+    license.discordUsername = null;
+    await license.save();
+
+    res.json({ success: true });
+  } catch {
+    res.status(500).json({ success: false, error: "Erro ao resetar HWID" });
+  }
+});
+
+app.post("/api/licenses/delete", checkAdmin, async (req, res) => {
+  try {
+    const { key } = req.body;
+    const result = await License.deleteOne({ key });
+
+    if (result.deletedCount === 0) {
+      return res.json({ success: false, error: "Key não encontrada" });
+    }
+
+    res.json({ success: true });
+  } catch {
+    res.status(500).json({ success: false, error: "Erro ao excluir key" });
+  }
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log("Rodando na Porta " + PORT);
+  console.log("rodando na porta " + PORT);
 });
