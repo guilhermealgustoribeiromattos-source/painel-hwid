@@ -53,12 +53,8 @@ function checkAdmin(req, res, next) {
 
 // OAuth Discord PRIMEIRO
 app.get("/login", (req, res) => {
-  const url =
-    `https://discord.com/api/oauth2/authorize` +
-    `?client_id=${encodeURIComponent(CLIENT_ID)}` +
-    `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
-    `&response_type=code` +
-    `&scope=identify`;
+  return res.send("ROTA LOGIN OK");
+});
 
   return res.redirect(url);
 });
