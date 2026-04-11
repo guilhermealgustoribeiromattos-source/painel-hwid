@@ -102,21 +102,21 @@ app.get("/callback", async (req, res) => {
     };
 
     res.send(`
-      <html>
-        <head><title>Verificando Discord</title></head>
-        <body style="margin:0;background:#08111f;color:white;font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;">
-          <div style="text-align:center;padding:30px;border-radius:18px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);">
-            <h2>Discord verificado com sucesso</h2>
-            <div style="color:#8ea0c8;margin-top:10px;">Redirecionando... Não Atualize a Página.</div>
-          </div>
-          <script>
-            setTimeout(() => {
-              window.location.href = "/login.html?token=${loginToken}";
-            }, 1200);
-          </script>
-        </body>
-      </html>
-    `);
+  <html>
+    <head><title>Verificando Discord</title></head>
+    <body style="margin:0;background:#08111f;color:white;font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;">
+      <div style="text-align:center;padding:30px;border-radius:18px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);">
+        <h2>Discord verificado com sucesso</h2>
+        <div style="color:#8ea0c8;margin-top:10px;">Redirecionando... Não Atualize a Página.</div>
+      </div>
+      <script>
+        setTimeout(() => {
+          window.location.href = "/login.html?token=${loginToken}";
+        }, 1200);
+      </script>
+    </body>
+  </html>
+`);
   } catch (err) {
     if (err.response) {
       console.error("Erro Discord:", err.response.status, err.response.data);
