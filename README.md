@@ -1,3 +1,3 @@
 git add .
-git commit -m "teste rota login-test"
+git commit -m "fix docker run"
 git push
