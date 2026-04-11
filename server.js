@@ -51,23 +51,18 @@ function checkAdmin(req, res, next) {
   next();
 }
 
-app.get("/", (req, res) => {
-  res.redirect("/login.html");
-});
-
-app.get("/admin", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "admin.html"));
-});
-
-app.get("/discord-login", (req, res) => {
+app.get("/login", (req, res) => {
   const url =
     `https://discord.com/api/oauth2/authorize` +
     `?client_id=${encodeURIComponent(CLIENT_ID)}` +
     `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
     `&response_type=code` +
     `&scope=identify`;
-
   res.redirect(url);
+});
+
+app.get("/admin", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "admin.html"));
 });
 
 app.get("/callback", async (req, res) => {
