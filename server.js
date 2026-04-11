@@ -6,19 +6,39 @@ const path = require("path");
 
 const app = express();
 
-app.use(express.json());
-app.use(cors());
-app.use(express.static(path.join(__dirname, "public")));
-
-app.get("/", (req, res) => {
-  res.redirect("/login.html");
-});
-
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
 const REDIRECT_URI = process.env.REDIRECT_URI;
 const MONGODB_URI = process.env.MONGODB_URI;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+
+app.use(express.json());
+app.use(cors());
+
+// ROTA DO DISCORD PRIMEIRO
+app.get("/login", (req, res) => {
+  const url =
+    `https://discord.com/api/oauth2/authorize` +
+    `?client_id=${encodeURIComponent(CLIENT_ID)}` +
+    `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
+    `&response_type=code` +
+    `&scope=identify`;
+
+  return res.redirect(url);
+});
+
+// STATIC DEPOIS
+app.use(express.static(path.join(__dirname, "public")));
+
+// RAIZ
+app.get("/", (req, res) => {
+  res.redirect("/login.html");
+});
+
+// ADMIN
+app.get("/admin", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "admin.html"));
+});
 
 mongoose.connect(MONGODB_URI)
   .then(() => console.log("MongoDB Conectado"))
@@ -50,20 +70,6 @@ function checkAdmin(req, res, next) {
   }
   next();
 }
-
-app.get("/login", (req, res) => {
-  const url =
-    `https://discord.com/api/oauth2/authorize` +
-    `?client_id=${encodeURIComponent(CLIENT_ID)}` +
-    `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
-    `&response_type=code` +
-    `&scope=identify`;
-  res.redirect(url);
-});
-
-app.get("/admin", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "admin.html"));
-});
 
 app.get("/callback", async (req, res) => {
   try {
@@ -102,21 +108,21 @@ app.get("/callback", async (req, res) => {
     };
 
     res.send(`
-  <html>
-    <head><title>Verificando Discord</title></head>
-    <body style="margin:0;background:#08111f;color:white;font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;">
-      <div style="text-align:center;padding:30px;border-radius:18px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);">
-        <h2>Discord verificado com sucesso</h2>
-        <div style="color:#8ea0c8;margin-top:10px;">Redirecionando... Não Atualize a Página.</div>
-      </div>
-      <script>
-        setTimeout(() => {
-          window.location.href = "/login.html?token=${loginToken}";
-        }, 1200);
-      </script>
-    </body>
-  </html>
-`);
+      <html>
+        <head><title>Verificando Discord</title></head>
+        <body style="margin:0;background:#08111f;color:white;font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;">
+          <div style="text-align:center;padding:30px;border-radius:18px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);">
+            <h2>Discord verificado com sucesso</h2>
+            <div style="color:#8ea0c8;margin-top:10px;">Redirecionando...</div>
+          </div>
+          <script>
+            setTimeout(() => {
+              window.location.href = "/login.html?token=${loginToken}";
+            }, 1200);
+          </script>
+        </body>
+      </html>
+    `);
   } catch (err) {
     if (err.response) {
       console.error("Erro Discord:", err.response.status, err.response.data);
