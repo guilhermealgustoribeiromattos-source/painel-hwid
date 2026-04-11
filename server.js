@@ -12,6 +12,11 @@ const REDIRECT_URI = process.env.REDIRECT_URI;
 const MONGODB_URI = process.env.MONGODB_URI;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
+console.log("SERVER NOVO 11-04 TESTE");
+app.get("/login-test", (req, res) => {
+  return res.send("LOGIN TESTE OK 123");
+});
+
 app.use(express.json());
 app.use(cors());
 
