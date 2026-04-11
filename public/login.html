@@ -1,203 +1,162 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GZN Engine</title>
-  <style>
-    * { margin:0; padding:0; box-sizing:border-box; font-family:Arial,sans-serif; }
-    body { background:#08111f; color:white; min-height:100vh; }
-    .app { display:grid; grid-template-columns:460px 1fr; min-height:100vh; }
-    .left {
-      padding:40px 32px;
-      background:linear-gradient(180deg,#081427,#091933);
-      border-right:1px solid rgba(255,255,255,.05);
-    }
-    .brand { font-size:28px; font-weight:900; margin-bottom:28px; }
-    .session {
-      display:flex; align-items:center; gap:14px;
-      background:rgba(255,255,255,.03);
-      border:1px solid rgba(255,255,255,.06);
-      border-radius:18px; padding:16px; margin-bottom:18px;
-    }
-    .avatar {
-      width:56px; height:56px; border-radius:16px; object-fit:cover;
-      background:#0d1730;
-    }
-    .meta small { color:#7f8ba8; display:block; margin-bottom:4px; font-weight:700; letter-spacing:1px; }
-    .meta strong { font-size:16px; }
-    .input-wrap {
-      background:#0d1730; border:1px solid rgba(80,130,255,.35);
-      border-radius:16px; padding:16px; margin-bottom:12px;
-    }
-    input {
-      width:100%; background:transparent; border:none; outline:none;
-      color:white; font-size:15px; font-weight:700;
-    }
-    input::placeholder { color:#7283a7; }
-    .row {
-      display:flex; justify-content:space-between; align-items:center;
-      color:#8292b6; font-size:12px; margin:12px 0 18px;
-    }
-    .btn {
-      width:100%; height:54px; border:none; border-radius:16px;
-      cursor:pointer; font-weight:800; color:white; margin-bottom:12px;
-    }
-    .btn-discord { background:linear-gradient(180deg,#3774ff,#2457d8); }
-    .btn-panel { background:linear-gradient(180deg,#172847,#101d35); border:1px solid rgba(255,255,255,.06); }
-    .right {
-      display:flex; align-items:center; justify-content:center;
-      background:#02050a;
-    }
-    .logo {
-      max-width:76%; max-height:72%;
-      filter: drop-shadow(0 0 18px rgba(44,108,255,.35));
-    }
-    .toast {
-      position:fixed; right:24px; bottom:24px;
-      background:linear-gradient(180deg,#166742,#115233);
-      border:1px solid rgba(80,255,170,.15);
-      padding:15px 18px; border-radius:14px; display:none;
-      font-weight:800;
-    }
-    .toast.show { display:block; }
-    @media (max-width:1100px) {
-      .app { grid-template-columns:1fr; }
-      .right { display:none; }
-    }
-  </style>
+<meta charset="UTF-8">
+<title>GZN Engine</title>
+
+<style>
+body {
+  margin:0;
+  font-family: Arial;
+  background:#08111f;
+  color:white;
+  display:flex;
+  height:100vh;
+}
+
+.left {
+  width:380px;
+  padding:30px;
+  background:linear-gradient(180deg,#081427,#091933);
+}
+
+.right {
+  flex:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.logo {
+  font-size:26px;
+  font-weight:bold;
+  margin-bottom:20px;
+}
+
+.card {
+  background:rgba(255,255,255,0.05);
+  padding:15px;
+  border-radius:12px;
+  margin-bottom:20px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.avatar {
+  width:40px;
+  height:40px;
+  border-radius:8px;
+  background:#111;
+}
+
+input {
+  width:100%;
+  padding:12px;
+  margin-bottom:10px;
+  border-radius:8px;
+  border:none;
+  background:#0f1f3a;
+  color:white;
+}
+
+.btn {
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:8px;
+  margin-top:10px;
+  cursor:pointer;
+}
+
+.discord {
+  background:#3b82f6;
+}
+
+.enter {
+  background:#1f2937;
+}
+
+img {
+  max-width:600px;
+}
+</style>
 </head>
+
 <body>
-  <div class="app">
-    <div class="left">
-      <div class="brand">GZN ENGINE</div>
 
-      <div class="session">
-        <img id="avatar" class="avatar" src="/img/default-avatar.png" alt="avatar">
-        <div class="meta">
-          <small>SESSÃO ATIVA</small>
-          <strong id="sessionName">não sincronizado</strong>
-        </div>
-      </div>
+<div class="left">
+  <div class="logo">GZN ENGINE</div>
 
-      <div class="input-wrap">
-        <input id="keyInput" type="text" placeholder="Digite sua key">
-      </div>
-
-      <div class="row">
-        <label><input id="rememberKey" type="checkbox" checked> lembrar key</label>
-        <a href="/admin" style="color:#3e87ff;text-decoration:none;">painel admin</a>
-      </div>
-
-      <button class="btn btn-discord" onclick="loginDiscord()">ENTRAR COM DISCORD</button>
-      <button class="btn btn-panel" onclick="entrarPainel()">ENTRAR NO PAINEL</button>
-    </div>
-
-    <div class="right">
-      <img class="logo" src="/img/gzn.png" alt="GZN">
+  <div class="card">
+    <img id="avatar" class="avatar" src="">
+    <div>
+      <div style="font-size:12px;color:#aaa;">Sessão Ativa</div>
+      <div id="username">Não Conectado</div>
     </div>
   </div>
 
-  <div id="toast" class="toast">Discord sincronizado com sucesso!</div>
+  <input id="key" placeholder="Sua Key">
 
-  <script>
-    const keyInput = document.getElementById("keyInput");
-    const rememberKey = document.getElementById("rememberKey");
-    const sessionName = document.getElementById("sessionName");
-    const avatarImg = document.getElementById("avatar");
-    const toast = document.getElementById("toast");
+  <button class="btn discord" onclick="loginDiscord()">ENTRAR COM DISCORD</button>
+  <button class="btn enter" onclick="entrar()">ENTRAR NO PAINEL</button>
+</div>
 
-    const savedKey = localStorage.getItem("gzn_key");
-    if (savedKey) keyInput.value = savedKey;
+<div class="right">
+  <img src="gzn.png">
+</div>
 
-    const savedName = localStorage.getItem("gzn_discord_name");
-    const savedAvatar = localStorage.getItem("gzn_discord_avatar");
-    if (savedName) sessionName.textContent = savedName;
-    if (savedAvatar) avatarImg.src = savedAvatar;
+<script>
+// 👉 botão discord
+function loginDiscord(){
+  window.location.href = "/login";
+}
 
-    function loginDiscord() {
-      window.location.href = "/login";
+// 👉 pega token da URL
+const params = new URLSearchParams(window.location.search);
+const token = params.get("token");
+
+if(token){
+  fetch(`/session?token=${token}`)
+  .then(r => r.json())
+  .then(data => {
+    if(data.success){
+      document.getElementById("username").innerText = data.username;
+      document.getElementById("avatar").src = data.avatar;
+      localStorage.setItem("token", token);
     }
+  });
+}
 
-    function showToast() {
-      toast.classList.add("show");
-      setTimeout(() => toast.classList.remove("show"), 2500);
+// 👉 login final
+function entrar(){
+  const key = document.getElementById("key").value;
+  const token = localStorage.getItem("token");
+
+  if(!token){
+    alert("Faça Login com Discord Primeiro!");
+    return;
+  }
+
+  fetch("/auth", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({
+      token: token,
+      key: key,
+      hwid: "WEB-USER"
+    })
+  })
+  .then(r=>r.json())
+  .then(data=>{
+    if(data.success){
+      alert("Logado com Sucesso");
+    } else {
+      alert(data.error);
     }
+  });
+}
+</script>
 
-    async function carregarSessaoDiscord(token) {
-      try {
-        const res = await fetch(`/session?token=${encodeURIComponent(token)}`);
-        const data = await res.json();
-
-        if (!data.success) return;
-
-        sessionName.textContent = data.username || "discord sincronizado";
-        avatarImg.src = data.avatar || "/img/default-avatar.png";
-
-        localStorage.setItem("gzn_discord_name", data.username || "discord sincronizado");
-        localStorage.setItem("gzn_discord_avatar", data.avatar || "/img/default-avatar.png");
-      } catch {
-        console.log("Erro ao carregar sessão");
-      }
-    }
-
-    const params = new URLSearchParams(window.location.search);
-    const tokenFromUrl = params.get("token");
-
-    if (tokenFromUrl) {
-      localStorage.setItem("gzn_token", tokenFromUrl);
-      showToast();
-      carregarSessaoDiscord(tokenFromUrl);
-      window.history.replaceState({}, document.title, "/");
-    }
-
-    const existingToken = localStorage.getItem("gzn_token");
-    if (existingToken) {
-      carregarSessaoDiscord(existingToken);
-    }
-
-    async function entrarPainel() {
-      const token = localStorage.getItem("gzn_token");
-      const key = keyInput.value.trim();
-
-      if (!token) {
-        alert("Faça login com Discord primeiro.");
-        return;
-      }
-
-      if (!key) {
-        alert("Digite sua key.");
-        return;
-      }
-
-      if (rememberKey.checked) {
-        localStorage.setItem("gzn_key", key);
-      } else {
-        localStorage.removeItem("gzn_key");
-      }
-
-      // Aqui no site o hwid é fake.
-      // No app C# você troca isso pelo HWID real do Windows.
-      const hwid = "WEB-" + navigator.userAgent;
-
-      try {
-        const res = await fetch("/auth", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token, key, hwid })
-        });
-
-        const data = await res.json();
-
-        if (data.success) {
-          alert("Login realizado com sucesso!");
-        } else {
-          alert(data.error || "Erro ao entrar.");
-        }
-      } catch {
-        alert("Erro ao conectar com o servidor.");
-      }
-    }
-  </script>
 </body>
 </html>
