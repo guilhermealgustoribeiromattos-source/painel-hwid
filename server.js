@@ -21,7 +21,7 @@ const MONGODB_URI = process.env.MONGODB_URI;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
 mongoose.connect(MONGODB_URI)
-  .then(() => console.log("MongoDB conectado"))
+  .then(() => console.log("MongoDB Conectado"))
   .catch((err) => console.error("Erro MongoDB:", err));
 
 const licenseSchema = new mongoose.Schema({
@@ -46,7 +46,7 @@ function generateKey() {
 function checkAdmin(req, res, next) {
   const password = req.headers["x-admin-password"];
   if (password !== ADMIN_PASSWORD) {
-    return res.status(401).json({ success: false, error: "Senha admin inválida" });
+    return res.status(401).json({ success: false, error: "Senha Admin Inválida" });
   }
   next();
 }
@@ -116,7 +116,7 @@ app.get("/callback", async (req, res) => {
           </div>
           <script>
             setTimeout(() => {
-              window.location.href = "/?token=${loginToken}";
+              window.location.href = "/discord-login";
             }, 1200);
           </script>
         </body>
