@@ -111,7 +111,7 @@ app.get("/callback", async (req, res) => {
           </div>
           <script>
             setTimeout(() => {
-              window.location.href = "/discord-login";
+              window.location.href = "/login.html?token=${loginToken}";
             }, 1200);
           </script>
         </body>
